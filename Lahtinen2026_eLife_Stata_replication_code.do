@@ -1503,14 +1503,14 @@ meta summarize
 local gdadhd=gdiff in 2
 local gdadhd_se=gdiffse in 2
 di "ADHD-sex-difference p: " normal(-abs(`gdadhd'/`gdadhd_se'))*2
-di "ADHD-sex-difference p, BH-Adjusted:  " normal(-abs(`gdadhd'/`gdadhd_se'))*2/(1/35)
-
+di "ADHD-sex-difference p, BH-Adjusted:  " normal(-abs(`gdadhd'/`gdadhd_se'))*2/(2/35)
+*edit 9.2.2026: fixed p-value order (1/35->2/35)
 
 local gdea=gdiff in 14 
 local gdea_se=gdiffse in 14
 di "education-sex-difference p: " normal(-abs(`gdea'/`gdea_se'))*2
 di "education-sex-difference p:, BH-Adjusted: "  normal(-abs(`gdea'/`gdea_se'))*2/(1/35)
-
+*edit 9.2.2026: larger p than for ADHD, so we use that
 
 
 mat medif=medif\(r(theta),r(ci_lb), r(ci_ub),r(p))
@@ -1530,10 +1530,19 @@ meta summarize
 
 local adadhd=age65diff in 2
 local adadhd_se=age65diffse in 2
-di "ADHD-age-difference 25-64 vs 65-79 p:, BH-Adjusted: "  normal(-abs(`adadhd'/`adadhd_se'))*2/(1/35)
+di "ADHD-age-difference 25-64 vs 65-79 p: " normal(-abs(`adadhd'/`adadhd_se'))*2 ", BH-Adjusted: "  normal(-abs(`adadhd'/`adadhd_se'))*2/(1/35)
+
 
 gen age80diffp=normal(-abs(age80diff/age80diffse))*2
-list pgi age80diff age80diffse age80diffp
+sort age80diffp
+replace ord=_n
+gen  age80diffp_BH= age80diffp/(ord/35)
+	forvalues j=34(-1)1 {
+	replace age80diffp_BH=age80diffp_BH[_n+1] in `j' if age80diffp_BH>age80diffp_BH[_n+1]
+	}
+sort pgi
+list pgi age80diff age80diffse age80diffp age80diffp_BH
+*edit 9.2.2026: added calculations for age80diffp_BH
 
 mat medif=medif\(r(theta),r(ci_lb), r(ci_ub),r(p))
 
@@ -1545,3 +1554,4 @@ mat medif=medif\(r(theta),r(ci_lb), r(ci_ub),r(p))
 gen extrdiff2=extr_loghr-nonex_loghr
 gen extrdiffp=normal(-abs((extrdiff2)/extrdiffse))*2
 list pgi  hr_extr hr_nonex  extr_loghr nonex_loghr extrdiff  extrdiff2 extrdiffse extrdiffp
+
